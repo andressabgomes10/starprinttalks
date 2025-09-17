@@ -4,6 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ViewControls } from './view-controls';
 import { CajaEntityList, CajaSearchBar, CajaStatsCard, CajaHeader } from './ui/design-system';
 import { useClientData, Client } from '../hooks/useEntityData';
+import { useClients } from '../hooks/useClients';
+import { CreateClientModal } from './forms/CreateClientModal';
 import { 
   Filter, 
   Plus, 
