@@ -308,7 +308,7 @@ export function Reports({ user }) {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-600">Tempo Resposta (<3h)</span>
+                <span className="text-gray-600">Tempo Resposta menor que 3h</span>
                 <span className="font-medium">2.3h/3h</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
