@@ -24,7 +24,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { useNotifications } from './components/notifications';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-export default function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'inbox' | 'tickets' | 'clients' | 'settings' | 'profile' | 'team' | 'reports' | 'knowledge-base' | 'integrations'>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -32,7 +32,7 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   const { NotificationSystem, showSuccess, showInfo } = useNotifications();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   // Authentication handlers
   const handleLogin = () => {
