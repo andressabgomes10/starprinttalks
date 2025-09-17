@@ -1,0 +1,5 @@
+[33me33d82c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Configura banco de dados Supabase com schema completo baseado no ERD
+[33m2f4b64a[m Corrige outputDirectory para 'build' no vercel.json
+[33m88fbf6d[m Adiciona configurações de deploy para GitHub Pages e Vercel
+[33m469f97d[m Corrige dependências e atualiza nome do projeto para 'st talks v1'
+[33m701b09b[m Adiciona documentação e atualizações do projeto
