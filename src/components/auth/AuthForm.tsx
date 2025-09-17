@@ -384,7 +384,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
               className="w-full h-12 text-base font-medium rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
               disabled={isLoading}
             >
-              {loading ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center space-x-3">
                   <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
                   <span>
