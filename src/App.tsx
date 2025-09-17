@@ -136,90 +136,97 @@ function AppContent() {
   }
 
   return (
-    <ErrorBoundary>
-      <div className="h-screen flex bg-[var(--background)]">
-        {/* Mobile Sidebar Overlay */}
-        <AnimatePresence>
-          {isMobileSidebarOpen && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={() => setIsMobileSidebarOpen(false)}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
-          <CajaSidebar 
-            currentPage={currentPage} 
-            onPageChange={handlePageChange}
-            isCollapsed={isSidebarCollapsed}
-            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+    <div className="h-screen flex bg-[var(--background)]">
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setIsMobileSidebarOpen(false)}
           />
-        </div>
+        )}
+      </AnimatePresence>
 
-        {/* Mobile Sidebar */}
-        <AnimatePresence>
-          {isMobileSidebarOpen && (
-            <motion.div 
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 300, 
-                damping: 30,
-                mass: 0.8
-              }}
-              className="fixed inset-y-0 left-0 w-80 z-50 lg:hidden"
-            >
-              <CajaSidebar 
-                currentPage={currentPage} 
-                onPageChange={handlePageChange}
-                isMobile={true}
-                onClose={() => setIsMobileSidebarOpen(false)}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile Header */}
-          <MobileHeader />
-
-          {/* Page Content */}
-          <div className="flex-1 overflow-auto">
-            {renderCurrentPage()}
-          </div>
-        </div>
-        
-        {/* Mobile Menu */}
-        <MobileMenu
-          isOpen={isMobileMenuOpen}
-          onClose={() => setIsMobileMenuOpen(false)}
-          currentPage={currentPage}
-          onPageChange={handleMobileMenuPageChange}
-          onSearchOpen={() => setIsSearchOpen(true)}
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <CajaSidebar 
+          currentPage={currentPage} 
+          onPageChange={handlePageChange}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
-        
-        {/* Global Search */}
-        <GlobalSearch 
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          onNavigate={handleSearchNavigation}
-        />
-        
-        
-        {/* Notification System */}
-        <NotificationSystem />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <motion.div 
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30,
+              mass: 0.8
+            }}
+            className="fixed inset-y-0 left-0 w-80 z-50 lg:hidden"
+          >
+            <CajaSidebar 
+              currentPage={currentPage} 
+              onPageChange={handlePageChange}
+              isMobile={true}
+              onClose={() => setIsMobileSidebarOpen(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header */}
+        <MobileHeader />
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto">
+          {renderCurrentPage()}
+        </div>
       </div>
       
-      <Toaster />
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        currentPage={currentPage}
+        onPageChange={handleMobileMenuPageChange}
+        onSearchOpen={() => setIsSearchOpen(true)}
+      />
+      
+      {/* Global Search */}
+      <GlobalSearch 
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onNavigate={handleSearchNavigation}
+      />
+      
+      
+      {/* Notification System */}
+      <NotificationSystem />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+        <Toaster />
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
