@@ -2,50 +2,48 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card } from '../ui/card';
+import { useAuth } from '../../context/AuthContext';
 
-export function AuthForm({ onLogin }) {
-  const [isLoading, setIsLoading] = useState(false);
+export function AuthForm() {
+  const { login, loginDemo, register, loading } = useAuth();
+  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    name: ''
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError('');
+    setSuccess('');
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock user data
-    const userData = {
-      id: 'user001',
-      name: 'Usuário Demo',
-      email: formData.email || 'demo@cajatalks.com',
-      role: 'Admin',
-      avatar: null
-    };
-    
-    onLogin(userData);
-    setIsLoading(false);
+    if (isLogin) {
+      const result = await login(formData.email, formData.password);
+      if (!result.success) {
+        setError(result.error || 'Erro no login');
+      }
+    } else {
+      const result = await register(formData.email, formData.password, {
+        name: formData.name
+      });
+      if (result.success) {
+        setSuccess(result.message || 'Conta criada com sucesso!');
+        setIsLogin(true);
+      } else {
+        setError(result.error || 'Erro no registro');
+      }
+    }
   };
 
   const handleDemoLogin = async () => {
-    setIsLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const demoUser = {
-      id: 'demo001',
-      name: 'Usuário Demo',
-      email: 'demo@cajatalks.com',
-      role: 'Admin',
-      avatar: null
-    };
-    
-    onLogin(demoUser);
-    setIsLoading(false);
+    setError('');
+    const result = await loginDemo();
+    if (!result.success) {
+      setError(result.error || 'Erro no login demo');
+    }
   };
 
   const handleChange = (e) => {
@@ -70,7 +68,63 @@ export function AuthForm({ onLogin }) {
         </div>
 
         <Card className="p-6 shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <div className="mb-4">
+            <div className="flex rounded-lg bg-gray-100 p-1">
+              <button
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  isLogin 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  !isLogin 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Registro
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-600 text-sm">{success}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome Completo
+                </label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full"
+                  disabled={loading}
+                  required
+                />
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -83,7 +137,8 @@ export function AuthForm({ onLogin }) {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full"
-                disabled={isLoading}
+                disabled={loading}
+                required
               />
             </div>
 
@@ -99,22 +154,23 @@ export function AuthForm({ onLogin }) {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full"
-                disabled={isLoading}
+                disabled={loading}
+                required
               />
             </div>
 
             <Button 
               type="submit" 
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium py-2.5"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <div className="flex items-center">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Entrando...
+                  {isLogin ? 'Entrando...' : 'Registrando...'}
                 </div>
               ) : (
-                'Entrar'
+                isLogin ? 'Entrar' : 'Criar Conta'
               )}
             </Button>
           </form>
@@ -124,9 +180,9 @@ export function AuthForm({ onLogin }) {
               onClick={handleDemoLogin}
               variant="outline"
               className="w-full border-amber-200 text-amber-700 hover:bg-amber-50 font-medium py-2.5"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <div className="flex items-center">
                   <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mr-2"></div>
                   Carregando...

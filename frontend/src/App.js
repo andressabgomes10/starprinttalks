@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { Toaster } from './components/ui/toaster';
+import { AuthProvider } from './context/AuthContext';
 
 // Components
 import { AuthForm } from './components/auth/AuthForm';
@@ -18,44 +19,23 @@ import { KnowledgeBase } from './components/knowledge-base/KnowledgeBase';
 import { Integrations } from './components/integrations/Integrations';
 import { ActivityLog } from './components/activity-log/ActivityLog';
 
-// Mock data service
-import { mockDataService } from './services/mockDataService';
+// Hook de autenticação
+import { useAuth } from './context/AuthContext';
 
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+function AppContent() {
+  const { user, isAuthenticated, loading, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [user, setUser] = useState(null);
-
-  // Check for existing session
-  useEffect(() => {
-    const savedAuth = localStorage.getItem('cajatalks_auth');
-    if (savedAuth) {
-      const authData = JSON.parse(savedAuth);
-      setIsLoggedIn(true);
-      setUser(authData.user);
-      mockDataService.setCurrentUser(authData.user);
-    }
-  }, []);
-
-  const handleLogin = (userData) => {
-    setIsLoggedIn(true);
-    setUser(userData);
-    localStorage.setItem('cajatalks_auth', JSON.stringify({ user: userData }));
-    mockDataService.setCurrentUser(userData);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUser(null);
-    localStorage.removeItem('cajatalks_auth');
-    mockDataService.clearCurrentUser();
-  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
     setIsMobileSidebarOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setCurrentPage('dashboard');
   };
 
   // Mobile Header Component
@@ -100,10 +80,24 @@ export default function App() {
     }
   };
 
-  if (!isLoggedIn) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg mb-4 mx-auto">
+            <span className="text-white font-bold text-2xl">C</span>
+          </div>
+          <div className="w-8 h-8 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando Cajá Talks...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
-        <AuthForm onLogin={handleLogin} />
+        <AuthForm />
         <Toaster />
       </div>
     );
@@ -155,5 +149,15 @@ export default function App() {
 
       <Toaster />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
