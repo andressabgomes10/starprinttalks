@@ -10,17 +10,22 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
+import { useAuth } from '../hooks/useAuth';
+import { useToast } from './ui/use-toast';
 
 export function Profile() {
+  const { user, updateProfile, loading } = useAuth();
+  const { toast } = useToast();
+  
   const [userData, setUserData] = useState({
-    name: 'Ana Silva',
-    email: 'ana.silva@empresa.com',
+    name: user?.full_name || 'Usuário',
+    email: user?.email || 'usuario@exemplo.com',
     phone: '+55 11 99999-9999',
     location: 'São Paulo, SP',
-    role: 'Gerente de Atendimento',
+    role: user?.role === 'admin' ? 'Administrador' : user?.role === 'agent' ? 'Agente' : 'Cliente',
     department: 'Customer Success',
     joinDate: '2023-01-15',
-    avatar: null
+    avatar: user?.avatar_url || null
   });
 
   const [preferences, setPreferences] = useState({
@@ -38,9 +43,29 @@ export function Profile() {
     activeSessions: 3
   });
 
-  const handleSave = () => {
-    // Handle save logic here
-    console.log('Saving profile data...');
+  const handleSave = async () => {
+    try {
+      // Atualizar o perfil do usuário
+      await updateProfile({
+        full_name: userData.name,
+        email: userData.email,
+        avatar_url: userData.avatar
+      });
+      
+      // Mostrar mensagem de sucesso
+      toast({
+        title: "✅ Perfil atualizado!",
+        description: "Suas informações foram salvas com sucesso.",
+      });
+      
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      toast({
+        title: "❌ Erro ao salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const stats = [
@@ -66,9 +91,18 @@ export function Profile() {
               Gerencie suas informações pessoais e preferências
             </p>
           </div>
-          <Button onClick={handleSave} className="flex items-center space-x-2">
-            <Save className="w-4 h-4" />
-            <span>Salvar Alterações</span>
+          <Button onClick={handleSave} disabled={loading} className="flex items-center space-x-2">
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Salvando...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Salvar Alterações</span>
+              </>
+            )}
           </Button>
         </motion.div>
 

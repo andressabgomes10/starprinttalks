@@ -28,10 +28,12 @@ export class AuthService {
       localStorage.setItem('cajaTalks_demoUser', JSON.stringify(user))
       localStorage.setItem('cajaTalks_authToken', this.generateToken())
 
-      return {
+      const result = {
         user,
         session: { access_token: 'demo-token' },
       }
+
+      return result
     } catch (error) {
       console.error('Registration error:', error)
       throw error

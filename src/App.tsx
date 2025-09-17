@@ -22,9 +22,9 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Hooks
 import { useNotifications } from './components/notifications';
+import { useAuth } from './hooks/useAuth';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'inbox' | 'tickets' | 'clients' | 'settings' | 'profile' | 'team' | 'reports' | 'knowledge-base' | 'integrations'>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -32,10 +32,10 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   const { NotificationSystem, showSuccess, showInfo } = useNotifications();
+  const { user, isAuthenticated, loading } = useAuth();
 
   // Authentication handlers
   const handleLogin = () => {
-    setIsLoggedIn(true);
     showSuccess('Bem-vindo!', 'Login realizado com sucesso');
   };
 
@@ -118,8 +118,20 @@ export default function App() {
     }
   };
 
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-4 border-[var(--caja-yellow)]/30 border-t-[var(--caja-yellow)] rounded-full animate-spin mx-auto"></div>
+          <p className="text-[var(--muted-foreground)]">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Render login screen if not authenticated
-  if (!isLoggedIn) {
+  if (!isAuthenticated) {
     return (
       <ErrorBoundary>
         <AuthForm onLogin={handleLogin} />

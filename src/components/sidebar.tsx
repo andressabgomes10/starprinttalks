@@ -27,6 +27,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { Separator } from './ui/separator';
 import { motion, AnimatePresence } from 'motion/react';
 import { CajaLogo } from './ui/caja-logo';
+import { useAuth } from '../hooks/useAuth';
 
 interface SidebarProps {
   currentPage: string;
@@ -39,6 +40,7 @@ interface SidebarProps {
 
 export function CajaSidebar({ currentPage, onPageChange, isMobile, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, badge: null },
@@ -382,14 +384,18 @@ export function CajaSidebar({ currentPage, onPageChange, isMobile, onClose, isCo
               >
                 <div className="flex items-center space-x-3 mb-3">
                   <Avatar className="h-10 w-10 border-2 border-[var(--caja-yellow)]/20">
-                    <AvatarImage src="/avatar.jpg" />
+                    <AvatarImage src={user?.avatar_url || "/avatar.jpg"} />
                     <AvatarFallback className="bg-[var(--caja-yellow)] text-[var(--caja-black)] font-semibold">
-                      JS
+                      {user?.full_name ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[var(--foreground)] truncate">João Silva</p>
-                    <p className="text-xs text-[var(--muted-foreground)] truncate">joao@empresa.com</p>
+                    <p className="text-sm font-semibold text-[var(--foreground)] truncate">
+                      {user?.full_name || 'Usuário'}
+                    </p>
+                    <p className="text-xs text-[var(--muted-foreground)] truncate">
+                      {user?.email || 'usuario@exemplo.com'}
+                    </p>
                   </div>
                   <motion.button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}

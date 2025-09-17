@@ -85,10 +85,11 @@ export function useAuth() {
           avatar_url: null,
           role: 'client',
         }
-        console.log('SignUp successful, user:', userData)
         
-        // Store user data but don't set as logged in (user needs to login)
-        localStorage.setItem('cajaTalks_signUpUser', JSON.stringify(userData))
+        // Store user data and set as logged in (for demo purposes)
+        setUser(userData)
+        localStorage.setItem('cajaTalks_demoUser', JSON.stringify(userData))
+        localStorage.setItem('cajaTalks_authToken', 'demo-token')
       }
       
       return { data, error: null }
