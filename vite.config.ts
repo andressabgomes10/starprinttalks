@@ -1,6 +1,6 @@
 
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
@@ -41,20 +41,13 @@ export default defineConfig({
             '@radix-ui/react-navigation-menu',
             '@radix-ui/react-menubar',
             '@radix-ui/react-hover-card',
-            '@radix-ui/react-context-menu',
-            '@radix-ui/react-collapsible',
-            '@radix-ui/react-aspect-ratio',
             '@radix-ui/react-alert-dialog',
             '@radix-ui/react-accordion'
           ],
           'chart-vendor': ['recharts'],
           'utils-vendor': [
             'lucide-react',
-            'class-variance-authority',
-            'cmdk',
-            'sonner',
-            'vaul',
-            'next-themes'
+            'class-variance-authority'
           ]
         }
       }
