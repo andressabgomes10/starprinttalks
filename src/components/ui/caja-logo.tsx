@@ -1,116 +1,128 @@
 import { cn } from './utils';
-import cajaLogo from '@/assets/8fb6c1d53e58f03c03942d9f62603af840e8a7fc.png';
-import { motion } from 'motion/react';
+import { Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface CajaLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  variant?: 'default' | 'elevated' | 'minimal';
+  variant?: 'default' | 'white' | 'dark';
   animated?: boolean;
   className?: string;
-  onClick?: () => void;
 }
 
-const sizeClasses = {
-  xs: 'w-6 h-6 p-1',
-  sm: 'w-8 h-8 p-1.5',
-  md: 'w-10 h-10 p-2',
-  lg: 'w-16 h-16 p-3',
-  xl: 'w-24 h-24 p-4'
+interface CajaLogoWithTextProps extends CajaLogoProps {
+  logoSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  textSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+}
+
+const sizeMap = {
+  xs: 'h-3 w-3',
+  sm: 'h-4 w-4',
+  md: 'h-5 w-5',
+  lg: 'h-6 w-6',
+  xl: 'h-8 w-8',
 };
 
-const variantClasses = {
-  default: 'bg-white rounded-xl shadow-sm border border-[var(--caja-yellow)]/20 hover:shadow-md hover:border-[var(--caja-yellow)]/40',
-  elevated: 'bg-white rounded-2xl shadow-lg border border-[var(--caja-yellow)]/20 hover:shadow-xl hover:border-[var(--caja-yellow)]/40',
-  minimal: 'bg-white rounded-lg shadow-sm border border-[var(--border)]'
+const textSizeMap = {
+  xs: 'text-xs',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
+};
+
+const variantMap = {
+  default: 'text-[var(--caja-yellow)]',
+  white: 'text-white',
+  dark: 'text-[var(--caja-black)]',
 };
 
 export function CajaLogo({ 
   size = 'md', 
   variant = 'default', 
-  animated = true,
-  className,
-  onClick 
+  animated = false, 
+  className 
 }: CajaLogoProps) {
-  const containerClasses = cn(
-    'flex items-center justify-center transition-all duration-300',
-    sizeClasses[size],
-    variantClasses[variant],
-    onClick && 'cursor-pointer',
-    className
-  );
+  const LogoComponent = animated ? motion.div : 'div';
+  const IconComponent = animated ? motion(Zap) : Zap;
 
-  const content = (
-    <div className={containerClasses} onClick={onClick}>
-      <img 
-        src={cajaLogo} 
-        alt="Cajá Talks" 
-        className="w-full h-full object-contain"
+  const animationProps = animated ? {
+    initial: { scale: 0.8, opacity: 0 },
+    animate: { scale: 1, opacity: 1 },
+    transition: { duration: 0.5, ease: "easeOut" },
+    whileHover: { scale: 1.1 },
+    whileTap: { scale: 0.95 }
+  } : {};
+
+  return (
+    <LogoComponent 
+      className={cn("flex items-center justify-center", className)}
+      {...animationProps}
+    >
+      <IconComponent
+        className={cn(
+          sizeMap[size],
+          variantMap[variant],
+          animated && "drop-shadow-sm"
+        )}
+        {...(animated && {
+          animate: { rotate: [0, 10, -10, 0] },
+          transition: { 
+            duration: 2, 
+            repeat: Infinity, 
+            repeatDelay: 3,
+            ease: "easeInOut"
+          }
+        })}
       />
-    </div>
+    </LogoComponent>
   );
-
-  if (animated) {
-    return (
-      <motion.div
-        whileHover={{ scale: 1.05, rotate: onClick ? 1 : 0 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ duration: 0.2 }}
-      >
-        {content}
-      </motion.div>
-    );
-  }
-
-  return content;
-}
-
-// Componente para logo com texto
-interface CajaLogoWithTextProps extends Omit<CajaLogoProps, 'size'> {
-  logoSize?: CajaLogoProps['size'];
-  showText?: boolean;
-  textSize?: 'sm' | 'md' | 'lg';
-  orientation?: 'horizontal' | 'vertical';
 }
 
 export function CajaLogoWithText({ 
-  logoSize = 'md',
-  showText = true,
-  textSize = 'md',
-  orientation = 'horizontal',
-  variant = 'default',
-  animated = true,
-  className,
-  onClick
+  logoSize = 'md', 
+  textSize = 'md', 
+  variant = 'default', 
+  animated = false, 
+  className 
 }: CajaLogoWithTextProps) {
-  const textSizeClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg'
-  };
+  const ContainerComponent = animated ? motion.div : 'div';
+  const TextComponent = animated ? motion.span : 'span';
 
-  const containerClasses = cn(
-    'flex items-center',
-    orientation === 'horizontal' ? 'space-x-3' : 'flex-col space-y-2',
-    className
-  );
+  const containerAnimationProps = animated ? {
+    initial: { x: -20, opacity: 0 },
+    animate: { x: 0, opacity: 1 },
+    transition: { duration: 0.6, ease: "easeOut" },
+    whileHover: { scale: 1.02 }
+  } : {};
+
+  const textAnimationProps = animated ? {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { delay: 0.3, duration: 0.4 }
+  } : {};
 
   return (
-    <div className={containerClasses} onClick={onClick}>
+    <ContainerComponent 
+      className={cn("flex items-center gap-2", className)}
+      {...containerAnimationProps}
+    >
       <CajaLogo 
         size={logoSize} 
         variant={variant} 
         animated={animated}
-        onClick={onClick}
       />
-      {showText && (
-        <span className={cn(
-          'font-semibold text-[var(--foreground)] transition-colors duration-200',
-          textSizeClasses[textSize],
-          onClick && 'hover:text-[var(--caja-yellow)] cursor-pointer'
-        )}>
-          Cajá Talks
-        </span>
-      )}
-    </div>
+      <TextComponent
+        className={cn(
+          textSizeMap[textSize],
+          "font-bold tracking-tight select-none",
+          variant === 'white' ? 'text-white' : 
+          variant === 'dark' ? 'text-[var(--caja-black)]' : 
+          'text-[var(--foreground)]'
+        )}
+        {...textAnimationProps}
+      >
+        Star Print Talks
+      </TextComponent>
+    </ContainerComponent>
   );
 }
