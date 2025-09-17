@@ -22,7 +22,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const { toast } = useToast();
-  const { signIn, signUp, resetPassword, loading } = useAuth();
+  const { login, isLoading } = useAuth();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
