@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ViewControls } from './view-controls';
 import { CajaEntityList, CajaSearchBar, CajaStatsCard, CajaHeader } from './ui/design-system';
 import { useTicketData, TicketData } from '../hooks/useEntityData';
+import { useTickets } from '../hooks/useTickets';
 import { 
   Plus, 
   RefreshCw,
@@ -17,164 +18,101 @@ import {
 } from 'lucide-react';
 
 export function Tickets() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('created');
+  const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const { transformTicketToEntity } = useTicketData();
+  const { 
+    tickets, 
+    allTickets,
+    loading, 
+    error, 
+    filters, 
+    updateFilters, 
+    fetchTickets 
+  } = useTickets();
 
-  const tickets: TicketData[] = [
-    {
-      id: 'TIC-001',
-      title: 'Problema no login do sistema',
-      description: 'Usuário relatando dificuldades para acessar sua conta após a atualização do sistema. Erro 500 intermitente.',
-      status: 'open',
-      priority: 'high',
-      client: 'Maria Santos',
-      assignee: 'João Silva',
-      created: '2024-01-15T10:00:00Z',
-      updated: '2024-01-15T14:30:00Z',
-      category: 'Técnico',
-      tags: ['login', 'bug', 'urgente'],
-      messages: 12
-    },
-    {
-      id: 'TIC-002',
-      title: 'Solicitação de nova funcionalidade',
-      description: 'Cliente solicitando implementação de relatórios personalizados no dashboard principal.',
-      status: 'in_progress',
-      priority: 'medium',
-      client: 'João Silva',
-      assignee: 'Ana Costa',
-      created: '2024-01-14T09:15:00Z',
-      updated: '2024-01-15T11:20:00Z',
-      category: 'Feature Request',
-      tags: ['enhancement', 'dashboard'],
-      messages: 8
-    },
-    {
-      id: 'TIC-003',
-      title: 'Erro na geração de relatórios',
-      description: 'Relatórios mensais não estão sendo gerados corretamente. Dados inconsistentes na base.',
-      status: 'resolved',
-      priority: 'high',
-      client: 'Ana Costa',
-      assignee: 'Carlos Oliveira',
-      created: '2024-01-13T16:45:00Z',
-      updated: '2024-01-15T09:00:00Z',
-      category: 'Bug',
-      tags: ['relatórios', 'dados'],
-      messages: 15
-    },
-    {
-      id: 'TIC-004',
-      title: 'Dúvida sobre cobrança',
-      description: 'Cliente questionando valores cobrados no último mês. Necessário verificar histórico de uso.',
-      status: 'open',
-      priority: 'low',
-      client: 'Carlos Oliveira',
-      assignee: 'Fernanda Lima',
-      created: '2024-01-12T14:20:00Z',
-      updated: '2024-01-14T16:10:00Z',
-      category: 'Suporte',
-      tags: ['billing', 'suporte'],
-      messages: 5
-    },
-    {
-      id: 'TIC-005',
-      title: 'Sistema lento na navegação',
-      description: 'Performance degradada em todas as páginas do sistema. Necessário investigar causa raiz.',
-      status: 'in_progress',
-      priority: 'urgent',
-      client: 'Fernanda Lima',
-      assignee: 'João Silva',
-      created: '2024-01-11T11:30:00Z',
-      updated: '2024-01-15T13:45:00Z',
-      category: 'Performance',
-      tags: ['performance', 'crítico'],
-      messages: 20
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchTickets();
+    } finally {
+      setIsRefreshing(false);
     }
-  ];
-
-  const filteredAndSortedTickets = tickets
-    .filter(ticket => {
-      const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           ticket.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           ticket.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-      const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-      
-      return matchesSearch && matchesStatus && matchesPriority;
-    })
-    .sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortBy) {
-        case 'title':
-          aValue = a.title.toLowerCase();
-          bValue = b.title.toLowerCase();
-          break;
-        case 'status':
-          aValue = a.status;
-          bValue = b.status;
-          break;
-        case 'priority':
-          const priorityOrder = { low: 1, medium: 2, high: 3, urgent: 4 };
-          aValue = priorityOrder[a.priority as keyof typeof priorityOrder];
-          bValue = priorityOrder[b.priority as keyof typeof priorityOrder];
-          break;
-        case 'client':
-          aValue = a.client.toLowerCase();
-          bValue = b.client.toLowerCase();
-          break;
-        case 'created':
-          aValue = new Date(a.created).getTime();
-          bValue = new Date(b.created).getTime();
-          break;
-        case 'updated':
-          aValue = new Date(a.updated).getTime();
-          bValue = new Date(b.updated).getTime();
-          break;
-        default:
-          aValue = new Date(a.created).getTime();
-          bValue = new Date(b.created).getTime();
-      }
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-      } else {
-        return sortOrder === 'asc' ? (aValue as number) - (bValue as number) : (bValue as number) - (aValue as number);
-      }
-    });
+  };
 
   const getTicketStats = () => {
+    if (!allTickets) return {
+      total: 0,
+      open: 0,
+      in_progress: 0,
+      resolved: 0,
+      high_priority: 0
+    };
+
     return {
-      total: tickets.length,
-      open: tickets.filter(t => t.status === 'open').length,
-      in_progress: tickets.filter(t => t.status === 'in_progress').length,
-      resolved: tickets.filter(t => t.status === 'resolved').length,
-      high_priority: tickets.filter(t => t.priority === 'high' || t.priority === 'urgent').length
+      total: allTickets.length,
+      open: allTickets.filter(t => t.status === 'open').length,
+      in_progress: allTickets.filter(t => t.status === 'in_progress').length,
+      resolved: allTickets.filter(t => t.status === 'resolved').length,
+      high_priority: allTickets.filter(t => t.priority === 'high' || t.priority === 'urgent').length
     };
   };
 
   const stats = getTicketStats();
 
-  // Transformar tickets para o formato unificado
-  const entityItems = filteredAndSortedTickets.map(ticket => ({
-    ...transformTicketToEntity(ticket),
-    selected: selectedTicket === ticket.id,
-    onClick: () => setSelectedTicket(selectedTicket === ticket.id ? null : ticket.id),
-    actions: (
-      <Button variant="ghost" size="sm">
-        <MoreVertical className="h-4 w-4" />
-      </Button>
-    )
-  }));
+  // Transform tickets para o formato unificado
+  const entityItems = tickets.map(ticket => {
+    // Convert to TicketData format expected by useTicketData
+    const ticketData: TicketData = {
+      id: ticket.id,
+      title: ticket.title,
+      description: ticket.description || '',
+      status: ticket.status,
+      priority: ticket.priority,
+      client: ticket.client_name || 'Cliente não identificado',
+      assignee: ticket.assigned_user_name || undefined,
+      created: ticket.created_at,
+      updated: ticket.updated_at,
+      category: ticket.category || 'Geral',
+      tags: ticket.tags || [],
+      messages: ticket.messages || 0
+    };
+
+    return {
+      ...transformTicketToEntity(ticketData),
+      selected: selectedTicket === ticket.id,
+      onClick: () => setSelectedTicket(selectedTicket === ticket.id ? null : ticket.id),
+      actions: (
+        <Button variant="ghost" size="sm">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      )
+    };
+  });
+
+  if (error) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center space-y-4">
+        <AlertCircle className="h-12 w-12 text-red-500" />
+        <div className="text-center">
+          <p className="text-lg font-medium text-red-600">Erro ao carregar tickets</p>
+          <p className="text-sm text-gray-500 mt-1">{error}</p>
+          <Button 
+            onClick={handleRefresh} 
+            className="mt-4"
+            variant="outline"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -192,13 +130,10 @@ export function Tickets() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setIsRefreshing(true);
-                  setTimeout(() => setIsRefreshing(false), 1000);
-                }}
-                disabled={isRefreshing}
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing || loading ? 'animate-spin' : ''}`} />
                 Atualizar
               </Button>
               <Button className="bg-[var(--caja-yellow)] hover:bg-[var(--caja-yellow)]/90 text-[var(--caja-black)] shadow-sm">
@@ -215,25 +150,25 @@ export function Tickets() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <CajaStatsCard
             title="Total"
-            value={stats.total.toString()}
+            value={loading ? '...' : stats.total.toString()}
             icon={AlertCircle}
             variant="default"
           />
           <CajaStatsCard
             title="Abertos"
-            value={stats.open.toString()}
+            value={loading ? '...' : stats.open.toString()}
             icon={AlertCircle}
             variant="yellow"
           />
           <CajaStatsCard
             title="Em Andamento"
-            value={stats.in_progress.toString()}
+            value={loading ? '...' : stats.in_progress.toString()}
             icon={Clock}
             variant="brown"
           />
           <CajaStatsCard
             title="Resolvidos"
-            value={stats.resolved.toString()}
+            value={loading ? '...' : stats.resolved.toString()}
             icon={CheckCircle}
             variant="green"
             change="+8 hoje"
@@ -241,7 +176,7 @@ export function Tickets() {
           />
           <CajaStatsCard
             title="Alta Prioridade"
-            value={stats.high_priority.toString()}
+            value={loading ? '...' : stats.high_priority.toString()}
             icon={Zap}
             variant="default"
           />
@@ -254,13 +189,13 @@ export function Tickets() {
           <div className="flex-1 max-w-md">
             <CajaSearchBar
               placeholder="Buscar por título, cliente ou ID..."
-              value={searchTerm}
-              onChange={setSearchTerm}
+              value={filters.search}
+              onChange={(value) => updateFilters({ search: value })}
             />
           </div>
 
           <div className="flex items-center space-x-3">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
               <SelectTrigger className="w-32 border-0 bg-[var(--muted)]/50">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -273,7 +208,7 @@ export function Tickets() {
               </SelectContent>
             </Select>
 
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <Select value={filters.priority} onValueChange={(value) => updateFilters({ priority: value })}>
               <SelectTrigger className="w-32 border-0 bg-[var(--muted)]/50">
                 <SelectValue placeholder="Prioridade" />
               </SelectTrigger>
@@ -297,36 +232,46 @@ export function Tickets() {
         onSortChange={setSortBy}
         sortOrder={sortOrder}
         onSortOrderChange={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-        itemCount={filteredAndSortedTickets.length}
-        totalCount={tickets.length}
+        itemCount={tickets.length}
+        totalCount={allTickets?.length || 0}
         sortOptions={[
-          { value: 'created', label: 'Data de Criação' },
-          { value: 'updated', label: 'Última Atualização' },
+          { value: 'created_at', label: 'Data de Criação' },
+          { value: 'updated_at', label: 'Última Atualização' },
           { value: 'title', label: 'Título' },
           { value: 'status', label: 'Status' },
           { value: 'priority', label: 'Prioridade' },
-          { value: 'client', label: 'Cliente' }
+          { value: 'client_name', label: 'Cliente' }
         ]}
       />
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          <CajaEntityList
-            items={entityItems}
-            viewMode={viewMode}
-            emptyState={
-              <div className="text-center space-y-2">
-                <AlertCircle className="mx-auto h-12 w-12 text-[var(--muted-foreground)]" />
-                <p className="text-lg font-medium text-[var(--muted-foreground)]">
-                  Nenhum ticket encontrado
-                </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  Tente ajustar seus filtros de pesquisa ou crie um novo ticket
-                </p>
-              </div>
-            }
-          />
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-[var(--muted-foreground)]" />
+              <span className="ml-2 text-[var(--muted-foreground)]">Carregando tickets...</span>
+            </div>
+          ) : (
+            <CajaEntityList
+              items={entityItems}
+              viewMode={viewMode}
+              emptyState={
+                <div className="text-center space-y-2">
+                  <AlertCircle className="mx-auto h-12 w-12 text-[var(--muted-foreground)]" />
+                  <p className="text-lg font-medium text-[var(--muted-foreground)]">
+                    {filters.search || filters.status !== 'all' || filters.priority !== 'all' 
+                      ? 'Nenhum ticket encontrado com os filtros aplicados'
+                      : 'Nenhum ticket encontrado'
+                    }
+                  </p>
+                  <p className="text-sm text-[var(--muted-foreground)]">
+                    Tente ajustar seus filtros de pesquisa ou crie um novo ticket
+                  </p>
+                </div>
+              }
+            />
+          )}
         </div>
       </div>
     </div>
