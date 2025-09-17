@@ -22,7 +22,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Hooks
 import { useNotifications } from './components/notifications';
-import { useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'inbox' | 'tickets' | 'clients' | 'settings' | 'profile' | 'team' | 'reports' | 'knowledge-base' | 'integrations'>('dashboard');
