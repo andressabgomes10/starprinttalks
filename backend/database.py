@@ -7,8 +7,8 @@ from supabase import create_client, Client
 from .models import *
 
 # Supabase client
-supabase_url = os.environ.get("VITE_SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
-supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("VITE_SUPABASE_ANON_KEY")
+supabase_url = os.environ.get("VITE_SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or "https://pzxqinijxqmiyvgkmohf.supabase.co"
+supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("VITE_SUPABASE_ANON_KEY") or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6eHFpbmlqeHFtaXl2Z2ttb2hmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODEyMDMzOSwiZXhwIjoyMDczNjk2MzM5fQ.Y5b9U-fJdoW7kAYeH_J7nKWxeZCnJNbMSWXCMfZTM3o"
 
 if not supabase_url or not supabase_key:
     print("Warning: Supabase credentials not found. Using in-memory storage.")

@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Get Supabase credentials from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pdsycdaieqcmogmjjkhm.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkc3ljZGFpZXFjbW9nbWpqa2htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NjM0NDcsImV4cCI6MjA3MzUzOTQ0N30.2w0h2spu5GmpQeQUHrt8t-stZtjVFmbB7Esopv2HGtk'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pzxqinijxqmiyvgkmohf.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6eHFpbmlqeHFtaXl2Z2ttb2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMjAzMzksImV4cCI6MjA3MzY5NjMzOX0.OHRDtdreeMJAzs3MD8smQ3hbmtnOcBPSJWfngDnjmx4'
 
 console.log('🔗 Supabase Configuration:', {
   url: supabaseUrl,

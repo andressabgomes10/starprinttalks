@@ -133,6 +133,8 @@ function NotificationItem({
           <button
             onClick={handleRemove}
             className="flex-shrink-0 p-1 hover:bg-black/5 rounded-full transition-colors duration-200"
+            title="Fechar notificação"
+            aria-label="Fechar notificação"
           >
             <X className="h-4 w-4 text-[var(--muted-foreground)]" />
           </button>

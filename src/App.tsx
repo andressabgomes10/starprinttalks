@@ -7,7 +7,6 @@ import { AuthForm } from './components/auth/AuthForm';
 import { Toaster } from './components/ui/toast';
 import { CajaSidebar } from './components/sidebar';
 import { GlobalSearch } from './components/global-search';
-import { Onboarding } from './components/onboarding';
 import { MobileMenu } from './components/mobile-menu';
 import { Dashboard } from './components/dashboard';
 import { Inbox } from './components/inbox';
@@ -19,7 +18,6 @@ import { Team } from './components/team';
 import { Reports } from './components/reports';
 import { KnowledgeBase } from './components/knowledge-base';
 import { Integrations } from './components/integrations';
-import { ActivityLog } from './components/activity-log';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Hooks
@@ -27,12 +25,11 @@ import { useNotifications } from './components/notifications';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'inbox' | 'tickets' | 'clients' | 'settings' | 'profile' | 'team' | 'reports' | 'knowledge-base' | 'integrations' | 'activity-log'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'inbox' | 'tickets' | 'clients' | 'settings' | 'profile' | 'team' | 'reports' | 'knowledge-base' | 'integrations'>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   
   const { NotificationSystem, showSuccess, showInfo } = useNotifications();
 
@@ -40,18 +37,6 @@ export default function App() {
   const handleLogin = () => {
     setIsLoggedIn(true);
     showSuccess('Bem-vindo!', 'Login realizado com sucesso');
-    
-    // Check if user is new (for demo purposes, always show onboarding)
-    const isNewUser = !localStorage.getItem('cajaTalks_onboardingCompleted');
-    if (isNewUser) {
-      setTimeout(() => setIsOnboardingOpen(true), 1000);
-    }
-  };
-
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('cajaTalks_onboardingCompleted', 'true');
-    setIsOnboardingOpen(false);
-    showSuccess('Tutorial concluído!', 'Agora você está pronto para usar o Cajá Talks');
   };
 
   // Navigation handlers
@@ -75,7 +60,6 @@ export default function App() {
       report: 'reports',
       article: 'knowledge-base',
       integration: 'integrations',
-      activity: 'activity-log',
     };
     
     const targetPage = searchNavigationMap[type];
@@ -91,6 +75,8 @@ export default function App() {
       <button
         onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         className="p-2 hover:bg-gray-100 rounded-lg"
+        title="Abrir menu"
+        aria-label="Abrir menu"
       >
         <div className="w-6 h-6 flex flex-col justify-center space-y-1">
           <div className="w-full h-0.5 bg-gray-600"></div>
@@ -107,6 +93,8 @@ export default function App() {
       <button
         onClick={() => setIsSearchOpen(true)}
         className="p-2 hover:bg-gray-100 rounded-lg"
+        title="Abrir busca"
+        aria-label="Abrir busca"
       >
         🔍
       </button>
@@ -126,7 +114,6 @@ export default function App() {
       case 'reports': return <Reports />;
       case 'knowledge-base': return <KnowledgeBase />;
       case 'integrations': return <Integrations />;
-      case 'activity-log': return <ActivityLog />;
       default: return <Dashboard />;
     }
   };
@@ -219,12 +206,6 @@ export default function App() {
           onNavigate={handleSearchNavigation}
         />
         
-        {/* Onboarding */}
-        <Onboarding 
-          isOpen={isOnboardingOpen}
-          onClose={() => setIsOnboardingOpen(false)}
-          onComplete={handleOnboardingComplete}
-        />
         
         {/* Notification System */}
         <NotificationSystem />

@@ -23,7 +23,6 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { ThemeToggle } from './theme-toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from './ui/separator';
 import { motion, AnimatePresence } from 'motion/react';
@@ -304,7 +303,6 @@ export function CajaSidebar({ currentPage, onPageChange, isMobile, onClose, isCo
                     );
                   })}
                   <div className="px-4 py-2">
-                    <ThemeToggle />
                   </div>
                 </div>
               </motion.div>

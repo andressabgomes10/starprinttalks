@@ -2,7 +2,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import { RealTimeStats } from './real-time-stats';
 import { PageLayout } from './layout/PageLayout';
 import { CajaStatsCard, CajaCard, CajaListItem, CajaButton } from './ui/design-system';
 import { 
@@ -178,7 +177,6 @@ export function Dashboard() {
           </CajaCard>
 
           {/* Real-time Stats */}
-          <RealTimeStats className="animate-in fade-in-0 slide-in-from-right-4 duration-500 delay-400" />
         </div>
 
         {/* Team Performance */}
