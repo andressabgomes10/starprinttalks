@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { api } from '../services/api';
 
 export interface Client {
   id: string;
@@ -7,12 +7,9 @@ export interface Client {
   email: string;
   phone?: string;
   company?: string;
-  status: 'active' | 'inactive' | 'suspended';
-  created: string;
-  updated: string;
-  lastContact?: string;
-  totalTickets: number;
-  openTickets: number;
+  status: 'active' | 'inactive' | 'pending';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ClientFilters {
@@ -33,37 +30,15 @@ export function useClients() {
     sortOrder: 'asc'
   });
 
-  // Fetch clients from Supabase
+  // Fetch clients from Cloudflare Worker API
   const fetchClients = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const { data, error: fetchError } = await supabase
-        .from('clients')
-        .select(`
-          *,
-          tickets(count)
-        `)
-        .order('name', { ascending: true });
-
-      if (fetchError) throw fetchError;
-
-      const formattedClients: Client[] = data?.map(client => ({
-        id: client.id,
-        name: client.name,
-        email: client.email,
-        phone: client.phone,
-        company: client.company,
-        status: client.status,
-        created: client.created_at,
-        updated: client.updated_at,
-        lastContact: client.last_contact,
-        totalTickets: client.tickets?.length || 0,
-        openTickets: client.tickets?.filter((t: any) => t.status !== 'closed').length || 0
-      })) || [];
-
-      setClients(formattedClients);
+      const data = await api.clients.getAll();
+      console.log('Clients fetched:', data);
+      setClients(data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar clientes');
       console.error('Error fetching clients:', err);
@@ -71,6 +46,11 @@ export function useClients() {
       setLoading(false);
     }
   }, []);
+
+  // Load clients on mount
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   // Filter and sort clients
   const filteredClients = useMemo(() => {
@@ -103,13 +83,9 @@ export function useClients() {
             aValue = a.status;
             bValue = b.status;
             break;
-          case 'created':
-            aValue = new Date(a.created).getTime();
-            bValue = new Date(b.created).getTime();
-            break;
-          case 'tickets':
-            aValue = a.totalTickets;
-            bValue = b.totalTickets;
+          case 'created_at':
+            aValue = new Date(a.created_at).getTime();
+            bValue = new Date(b.created_at).getTime();
             break;
           default:
             aValue = a.name.toLowerCase();
@@ -131,29 +107,27 @@ export function useClients() {
   }, []);
 
   // Create new client
-  const createClient = useCallback(async (clientData: Omit<Client, 'id' | 'created' | 'updated' | 'totalTickets' | 'openTickets'>) => {
+  const createClient = useCallback(async (clientData: {
+    name: string;
+    email: string;
+    phone?: string;
+    company?: string;
+    status?: string;
+  }) => {
     setLoading(true);
     setError(null);
     
     try {
-      const { data, error: createError } = await supabase
-        .from('clients')
-        .insert([{
-          name: clientData.name,
-          email: clientData.email,
-          phone: clientData.phone,
-          company: clientData.company,
-          status: clientData.status || 'active'
-        }])
-        .select()
-        .single();
-
-      if (createError) throw createError;
-
+      const newClient = await api.clients.create({
+        ...clientData,
+        status: clientData.status || 'active'
+      });
+      console.log('Client created:', newClient);
+      
       // Refresh clients list
       await fetchClients();
       
-      return data;
+      return newClient;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar cliente');
       console.error('Error creating client:', err);
@@ -169,28 +143,15 @@ export function useClients() {
     setError(null);
     
     try {
-      const { data, error: updateError } = await supabase
-        .from('clients')
-        .update({
-          name: updates.name,
-          email: updates.email,
-          phone: updates.phone,
-          company: updates.company,
-          status: updates.status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (updateError) throw updateError;
-
+      const updatedClient = await api.clients.update(id, updates);
+      console.log('Client updated:', updatedClient);
+      
       // Update local state
       setClients(prev => prev.map(client => 
-        client.id === id ? { ...client, ...updates } : client
+        client.id === id ? { ...client, ...updatedClient } : client
       ));
       
-      return data;
+      return updatedClient;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao atualizar cliente');
       console.error('Error updating client:', err);
@@ -206,13 +167,9 @@ export function useClients() {
     setError(null);
     
     try {
-      const { error: deleteError } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id);
-
-      if (deleteError) throw deleteError;
-
+      await api.clients.delete(id);
+      console.log('Client deleted:', id);
+      
       // Update local state
       setClients(prev => prev.filter(client => client.id !== id));
     } catch (err) {
@@ -226,6 +183,7 @@ export function useClients() {
 
   return {
     clients: filteredClients,
+    allClients: clients,
     loading,
     error,
     filters,
