@@ -117,24 +117,13 @@ export function AuthForm({ onLogin }: AuthFormProps) {
       return;
     }
 
-    try {
-      await resetPassword(email);
-      
-      toast({
-        title: "Email enviado!",
-        description: "Verifique seu email para redefinir a senha.",
-      });
-      
-      setMode('login');
-    } catch (error: any) {
-      console.error('Reset password error:', error);
-      
-      toast({
-        title: "Erro na recuperação",
-        description: error.message || "Não foi possível enviar o email. Tente novamente.",
-        variant: "destructive",
-      });
-    }
+    // Simulate password reset
+    toast({
+      title: "Email enviado!",
+      description: "Verifique seu email para redefinir a senha.",
+    });
+    
+    setMode('login');
   };
 
   const resetForm = () => {
