@@ -151,7 +151,9 @@ export function Clients() {
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros Avançados
               </Button>
-              <Button className="bg-[var(--caja-yellow)] hover:bg-[var(--caja-yellow)]/90 text-[var(--caja-black)] shadow-sm">
+              <Button className="bg-[var(--caja-yellow)] hover:bg-[var(--caja-yellow)]/90 text-[var(--caja-black)] shadow-sm"
+                onClick={() => setShowCreateModal(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Cliente
               </Button>
