@@ -382,7 +382,7 @@ export function AuthForm({ onLogin }: AuthFormProps) {
             <Button
               type="submit"
               className="w-full h-12 text-base font-medium rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
-              disabled={loading}
+              disabled={isLoading}
             >
               {loading ? (
                 <div className="flex items-center justify-center space-x-3">
