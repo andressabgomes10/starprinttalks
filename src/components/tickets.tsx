@@ -5,6 +5,7 @@ import { ViewControls } from './view-controls';
 import { CajaEntityList, CajaSearchBar, CajaStatsCard, CajaHeader } from './ui/design-system';
 import { useTicketData, TicketData } from '../hooks/useEntityData';
 import { useTickets } from '../hooks/useTickets';
+import { CreateTicketModal } from './forms/CreateTicketModal';
 import { 
   Plus, 
   RefreshCw,
