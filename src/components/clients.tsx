@@ -27,8 +27,10 @@ export function Clients() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { transformClientToEntity } = useClientData();
+  const { allClients, loading } = useClients();
 
   const clients: Client[] = [
     {
