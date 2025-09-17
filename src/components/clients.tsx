@@ -294,6 +294,12 @@ export function Clients() {
           />
         </div>
       </div>
+
+      {/* Create Client Modal */}
+      <CreateClientModal 
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
     </div>
   );
 }
