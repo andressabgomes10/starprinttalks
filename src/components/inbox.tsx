@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
 import { ViewControls } from './view-controls';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CajaListItem, CajaSearchBar, CajaButton, CajaCard } from './ui/design-system';
 import { useViewState, getStatusColor } from '../hooks/useDesignSystem';
 import { 

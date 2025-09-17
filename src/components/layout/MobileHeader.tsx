@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Button } from '../ui/button';
 import { HamburgerMenu } from '../hamburger-menu';
 import { Search, Wifi, WifiOff } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 // import cajaLogo from 'figma:asset/141c2845f579bd317c51c23d4f2e2cf17ec7da5e.png';
 
 interface MobileHeaderProps {

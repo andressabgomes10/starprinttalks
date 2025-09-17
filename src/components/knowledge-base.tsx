@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Search, Plus, BookOpen, Tag, User, Calendar, Eye, ThumbsUp, ThumbsDown, Edit, Trash2, FolderPlus, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';

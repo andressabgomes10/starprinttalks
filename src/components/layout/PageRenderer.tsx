@@ -1,5 +1,5 @@
 import { Suspense, lazy, memo, useCallback, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Loading } from '../loading';
 import { usePagePreload } from '../../hooks';
 import type { PageType } from '../../hooks/useAppState';
