@@ -44,30 +44,30 @@ export function AuthForm({ onLogin }: AuthFormProps) {
     e.preventDefault();
 
     try {
-      await signIn(email, password);
+      const success = await login(email, password);
       
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao Cajá Talks",
-      });
-      
-      onLogin();
-    } catch (error: any) {
-      console.error('Login error:', error);
-      
-      if (error.message.includes('Invalid login credentials')) {
+      if (success) {
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo ao Star Print Talks",
+        });
+        
+        onLogin();
+      } else {
         toast({
           title: "Credenciais inválidas",
           description: "Email ou senha incorretos. Tente novamente.",
           variant: "destructive",
         });
-      } else {
-        toast({
-          title: "Erro no login",
-          description: error.message || "Não foi possível fazer login. Tente novamente.",
-          variant: "destructive",
-        });
       }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      toast({
+        title: "Erro no login",
+        description: error.message || "Não foi possível fazer login. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
