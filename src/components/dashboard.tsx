@@ -4,6 +4,9 @@ import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { PageLayout } from './layout/PageLayout';
 import { CajaStatsCard, CajaCard, CajaListItem, CajaButton } from './ui/design-system';
+import { useDashboard } from '../hooks/useDashboard';
+import { useTickets } from '../hooks/useTickets';
+import { useClients } from '../hooks/useClients';
 import { 
   MessageSquare, 
   Users, 
@@ -14,46 +17,64 @@ import {
   AlertCircle,
   ArrowUpRight,
   Calendar,
-  Star
+  Star,
+  RefreshCw
 } from 'lucide-react';
 
 export function Dashboard() {
-  const stats = [
+  const { stats, loading: statsLoading, refreshStats } = useDashboard();
+  const { allTickets, loading: ticketsLoading } = useTickets();
+  const { allClients, loading: clientsLoading } = useClients();
+
+  // Calculate real stats from data
+  const dashboardStats = [
     {
       title: 'Conversas Ativas',
-      value: '247',
+      value: stats?.active_conversations?.toString() || '0',
       change: '+12%',
       changeType: 'positive' as const,
       icon: MessageSquare,
-      color: 'bg-[var(--caja-yellow)]'
+      color: 'bg-[var(--caja-yellow)]',
+      loading: statsLoading
     },
     {
       title: 'Tickets Abertos',
-      value: '32',
+      value: stats?.open_tickets?.toString() || '0',
       change: '-8%',
       changeType: 'positive' as const,
       icon: Ticket,
-      color: 'bg-[var(--caja-green)]'
+      color: 'bg-[var(--caja-green)]',
+      loading: statsLoading
     },
     {
       title: 'Clientes Ativos',
-      value: '1,235',
+      value: stats?.active_clients?.toString() || allClients?.filter(c => c.status === 'active').length.toString() || '0',
       change: '+18%',
       changeType: 'positive' as const,
       icon: Users,
-      color: 'bg-[var(--caja-brown)]'
+      color: 'bg-[var(--caja-brown)]',
+      loading: clientsLoading
     },
     {
       title: 'Satisfação',
-      value: '94%',
+      value: `${stats?.satisfaction || 94}%`,
       change: '+2%',
       changeType: 'positive' as const,
       icon: Star,
-      color: 'bg-[var(--caja-yellow)]'
+      color: 'bg-[var(--caja-yellow)]',
+      loading: statsLoading
     }
   ];
 
-  const recentActivity = [
+  // Recent activity from real tickets data
+  const recentActivity = allTickets?.slice(0, 4).map((ticket, index) => ({
+    id: ticket.id,
+    type: 'ticket',
+    title: `Ticket: ${ticket.title}`,
+    description: ticket.client_name ? `Cliente: ${ticket.client_name}` : 'Cliente não identificado',
+    time: new Date(ticket.created_at).toLocaleString('pt-BR'),
+    priority: ticket.priority
+  })) || [
     {
       id: 1,
       type: 'message',
@@ -69,22 +90,6 @@ export function Dashboard() {
       description: 'Cliente satisfeito com a solução',
       time: '15 min atrás',
       priority: 'medium'
-    },
-    {
-      id: 3,
-      type: 'client',
-      title: 'Novo cliente cadastrado',
-      description: 'Tech Solutions Ltda',
-      time: '1 hora atrás',
-      priority: 'low'
-    },
-    {
-      id: 4,
-      type: 'message',
-      title: 'Conversa escalada para supervisor',
-      description: 'Cliente solicita falar com gerente',
-      time: '2 horas atrás',
-      priority: 'high'
     }
   ];
 
@@ -94,6 +99,10 @@ export function Dashboard() {
     { name: 'Mariana Costa', messages: 42, satisfaction: 92, avatar: '👩‍💻' },
     { name: 'Rafael Lima', messages: 35, satisfaction: 96, avatar: '👨‍💻' }
   ];
+
+  const handleRefresh = async () => {
+    await refreshStats();
+  };
 
   return (
     <PageLayout
@@ -114,17 +123,17 @@ export function Dashboard() {
         onClick: () => console.log('Generate report')
       }}
       showRefresh={true}
-      onRefresh={() => console.log('Refreshing dashboard')}
+      onRefresh={handleRefresh}
     >
       <div className="space-y-6">
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
+          {dashboardStats.map((stat, index) => (
             <CajaStatsCard
               key={index}
               title={stat.title}
-              value={stat.value}
+              value={stat.loading ? '...' : stat.value}
               change={stat.change}
               changeType={stat.changeType}
               icon={stat.icon}
@@ -164,8 +173,9 @@ export function Dashboard() {
                         activity.type === 'ticket' ? Ticket : Users}
                   badges={[{
                     text: activity.priority === 'high' ? 'Alta' : 
-                          activity.priority === 'medium' ? 'Média' : 'Baixa',
-                    variant: activity.priority === 'high' ? 'red' : 
+                          activity.priority === 'medium' ? 'Média' : 
+                          activity.priority === 'urgent' ? 'Urgente' : 'Baixa',
+                    variant: activity.priority === 'high' || activity.priority === 'urgent' ? 'red' : 
                             activity.priority === 'medium' ? 'yellow' : 'green'
                   }]}
                   hoverable={true}
