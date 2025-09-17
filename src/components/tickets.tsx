@@ -278,6 +278,12 @@ export function Tickets() {
           )}
         </div>
       </div>
+
+      {/* Create Ticket Modal */}
+      <CreateTicketModal 
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
     </div>
   );
 }
