@@ -41,11 +41,11 @@ export const clientsApi = {
     method: 'POST',
     body: JSON.stringify(client),
   }),
-  update: (id: string, client: any) => request<any>(`/api/clients/${id}`, {
+  update: (id: string, client: any) => request<any>(`/api/clients?id=${id}`, {
     method: 'PUT',
     body: JSON.stringify(client),
   }),
-  delete: (id: string) => request<void>(`/api/clients/${id}`, {
+  delete: (id: string) => request<void>(`/api/clients?id=${id}`, {
     method: 'DELETE',
   }),
 }
@@ -57,11 +57,11 @@ export const ticketsApi = {
     method: 'POST',
     body: JSON.stringify(ticket),
   }),
-  update: (id: string, ticket: any) => request<any>(`/api/tickets/${id}`, {
+  update: (id: string, ticket: any) => request<any>(`/api/tickets?id=${id}`, {
     method: 'PUT',
     body: JSON.stringify(ticket),
   }),
-  delete: (id: string) => request<void>(`/api/tickets/${id}`, {
+  delete: (id: string) => request<void>(`/api/tickets?id=${id}`, {
     method: 'DELETE',
   }),
 }
@@ -88,6 +88,17 @@ export const notificationsApi = {
   }),
 }
 
+// API para Dashboard
+export const dashboardApi = {
+  getStats: () => request<{
+    active_conversations: number;
+    open_tickets: number;
+    active_clients: number;
+    satisfaction: number;
+    ticket_stats: Array<{ status: string; count: number }>;
+  }>('/api/dashboard/stats'),
+}
+
 // API para IA
 export const aiApi = {
   assist: (message: string, context?: string) => request<{ response: string; timestamp: string }>('/api/ai/assist', {
@@ -108,6 +119,7 @@ export const api = {
   tickets: ticketsApi,
   conversations: conversationsApi,
   notifications: notificationsApi,
+  dashboard: dashboardApi,
   ai: aiApi,
   health: healthApi,
 }
