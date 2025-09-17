@@ -348,6 +348,193 @@ const routes = {
     }
   },
 
+  // Update client
+  'PUT /api/clients': async (request, env) => {
+    try {
+      const url = new URL(request.url)
+      const id = url.searchParams.get('id')
+      const body = await request.json()
+      
+      if (!id) {
+        return new Response(JSON.stringify({ error: 'id is required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const { success, error } = await env.starprinttalks_db
+        .prepare('UPDATE clients SET name = ?, email = ?, phone = ?, company = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .bind(body.name, body.email, body.phone || null, body.company || null, body.status || 'active', id)
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      // Buscar o cliente atualizado
+      const { results } = await env.starprinttalks_db
+        .prepare('SELECT * FROM clients WHERE id = ?')
+        .bind(id)
+        .first()
+      
+      return new Response(JSON.stringify(results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+  },
+
+  // Delete client
+  'DELETE /api/clients': async (request, env) => {
+    try {
+      const url = new URL(request.url)
+      const id = url.searchParams.get('id')
+      
+      if (!id) {
+        return new Response(JSON.stringify({ error: 'id is required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const { success, error } = await env.starprinttalks_db
+        .prepare('DELETE FROM clients WHERE id = ?')
+        .bind(id)
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      return new Response(JSON.stringify({ message: 'Client deleted successfully' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+  },
+
+  // Update ticket
+  'PUT /api/tickets': async (request, env) => {
+    try {
+      const url = new URL(request.url)
+      const id = url.searchParams.get('id')
+      const body = await request.json()
+      
+      if (!id) {
+        return new Response(JSON.stringify({ error: 'id is required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const { success, error } = await env.starprinttalks_db
+        .prepare('UPDATE tickets SET title = ?, description = ?, priority = ?, status = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .bind(body.title, body.description || null, body.priority || 'medium', body.status || 'open', body.assigned_to || null, id)
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      // Buscar o ticket atualizado com joins
+      const { results } = await env.starprinttalks_db
+        .prepare(`
+          SELECT 
+            t.*,
+            c.name as client_name,
+            c.email as client_email,
+            c.company as client_company,
+            u.full_name as assigned_user_name,
+            u.email as assigned_user_email,
+            creator.full_name as creator_name,
+            creator.email as creator_email
+          FROM tickets t
+          LEFT JOIN clients c ON t.client_id = c.id
+          LEFT JOIN users u ON t.assigned_to = u.id
+          LEFT JOIN users creator ON t.created_by = creator.id
+          WHERE t.id = ?
+        `)
+        .bind(id)
+        .first()
+      
+      return new Response(JSON.stringify(results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+  },
+
+  // Delete ticket
+  'DELETE /api/tickets': async (request, env) => {
+    try {
+      const url = new URL(request.url)
+      const id = url.searchParams.get('id')
+      
+      if (!id) {
+        return new Response(JSON.stringify({ error: 'id is required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const { success, error } = await env.starprinttalks_db
+        .prepare('DELETE FROM tickets WHERE id = ?')
+        .bind(id)
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      return new Response(JSON.stringify({ message: 'Ticket deleted successfully' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+  },
+
+  // Dashboard stats endpoint
+  'GET /api/dashboard/stats': async (request, env) => {
+    try {
+      // Get basic counts
+      const [clients, tickets, conversations] = await Promise.all([
+        env.starprinttalks_db.prepare('SELECT COUNT(*) as count FROM clients WHERE status = "active"').first(),
+        env.starprinttalks_db.prepare('SELECT COUNT(*) as count FROM tickets WHERE status != "closed"').first(),
+        env.starprinttalks_db.prepare('SELECT COUNT(*) as count FROM conversations').first()
+      ])
+
+      // Get ticket stats by status
+      const ticketStats = await env.starprinttalks_db
+        .prepare('SELECT status, COUNT(*) as count FROM tickets GROUP BY status')
+        .all()
+
+      const stats = {
+        active_conversations: conversations.results?.count || 0,
+        open_tickets: ticketStats.results?.find(s => s.status === 'open')?.count || 0,
+        active_clients: clients.results?.count || 0,
+        satisfaction: 94, // Mock for now
+        ticket_stats: ticketStats.results || []
+      }
+      
+      return new Response(JSON.stringify(stats), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+  },
+
   // AI Assistant endpoint
   'POST /api/ai/assist': async (request, env) => {
     try {
@@ -369,6 +556,7 @@ const routes = {
             content: `You are a helpful customer support assistant for Star Print Talks. 
             You help users with their tickets, provide information about services, 
             and assist with technical issues. Be friendly, professional, and helpful.
+            Always respond in Portuguese.
             
             Context: ${context || 'No additional context provided'}`
           },
