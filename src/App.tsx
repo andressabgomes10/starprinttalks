@@ -119,7 +119,7 @@ function AppContent() {
   };
 
   // Show loading while checking authentication
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -131,12 +131,8 @@ function AppContent() {
   }
 
   // Render login screen if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <ErrorBoundary>
-        <AuthForm onLogin={handleLogin} />
-      </ErrorBoundary>
-    );
+  if (!user) {
+    return <AuthForm onLogin={handleLogin} />;
   }
 
   return (
