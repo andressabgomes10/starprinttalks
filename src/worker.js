@@ -1,15 +1,7 @@
 /**
  * Cloudflare Worker para Star Print Talks
- * API Backend usando Cloudflare Workers
+ * API Backend usando Cloudflare D1 Database
  */
-
-import { createClient } from '@supabase/supabase-js'
-
-// Configuração do Supabase
-const supabaseUrl = 'https://pzxqinijxqmiyvgkmohf.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6eHFpbmlqeHFtaXl2Z2ttb2hmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODEyMDMzOSwiZXhwIjoyMDczNjk2MzM5fQ.Y5b9U-fJdoW7kAYeH_J7nKWxeZCnJNbMSWXCMfZTM3o'
-
-const supabase = createClient(supabaseUrl, supabaseKey)
 
 // CORS headers
 const corsHeaders = {
@@ -28,6 +20,15 @@ function handleCORS(request) {
   }
 }
 
+// Helper function to generate UUID
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c == 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
+
 // API Routes
 const routes = {
   // Health check
@@ -35,22 +36,52 @@ const routes = {
     return new Response(JSON.stringify({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      service: 'Star Print Talks API'
+      service: 'Star Print Talks API (D1)'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   },
 
   // Users endpoints
-  'GET /api/users': async (request) => {
+  'GET /api/users': async (request, env) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
+      const { results } = await env.starprinttalks_db.prepare('SELECT * FROM users ORDER BY created_at DESC').all()
       
-      if (error) throw error
+      return new Response(JSON.stringify(results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+  },
+
+  'POST /api/users': async (request, env) => {
+    try {
+      const body = await request.json()
       
-      return new Response(JSON.stringify(data), {
+      // Gerar UUID se não fornecido
+      if (!body.id) {
+        body.id = generateUUID()
+      }
+      
+      const { success, error } = await env.starprinttalks_db
+        .prepare('INSERT INTO users (id, email, full_name, role, is_active) VALUES (?, ?, ?, ?, ?)')
+        .bind(body.id, body.email, body.full_name, body.role || 'client', body.is_active !== false)
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      // Buscar o usuário criado
+      const { results } = await env.starprinttalks_db
+        .prepare('SELECT * FROM users WHERE id = ?')
+        .bind(body.id)
+        .first()
+      
+      return new Response(JSON.stringify(results), {
+        status: 201,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     } catch (error) {
@@ -62,16 +93,13 @@ const routes = {
   },
 
   // Clients endpoints
-  'GET /api/clients': async (request) => {
+  'GET /api/clients': async (request, env) => {
     try {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const { results } = await env.starprinttalks_db
+        .prepare('SELECT * FROM clients ORDER BY created_at DESC')
+        .all()
       
-      if (error) throw error
-      
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(results), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     } catch (error) {
@@ -82,17 +110,36 @@ const routes = {
     }
   },
 
-  'POST /api/clients': async (request) => {
+  'POST /api/clients': async (request, env) => {
     try {
       const body = await request.json()
-      const { data, error } = await supabase
-        .from('clients')
-        .insert([body])
-        .select()
       
-      if (error) throw error
+      // Gerar UUID se não fornecido
+      if (!body.id) {
+        body.id = generateUUID()
+      }
       
-      return new Response(JSON.stringify(data[0]), {
+      const { success, error } = await env.starprinttalks_db
+        .prepare('INSERT INTO clients (id, name, email, phone, company, status) VALUES (?, ?, ?, ?, ?, ?)')
+        .bind(
+          body.id, 
+          body.name, 
+          body.email, 
+          body.phone || null, 
+          body.company || null, 
+          body.status || 'active'
+        )
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      // Buscar o cliente criado
+      const { results } = await env.starprinttalks_db
+        .prepare('SELECT * FROM clients WHERE id = ?')
+        .bind(body.id)
+        .first()
+      
+      return new Response(JSON.stringify(results), {
         status: 201,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -105,20 +152,28 @@ const routes = {
   },
 
   // Tickets endpoints
-  'GET /api/tickets': async (request) => {
+  'GET /api/tickets': async (request, env) => {
     try {
-      const { data, error } = await supabase
-        .from('tickets')
-        .select(`
-          *,
-          clients(name, email, company),
-          assigned_user:users!assigned_to(full_name, email)
+      const { results } = await env.starprinttalks_db
+        .prepare(`
+          SELECT 
+            t.*,
+            c.name as client_name,
+            c.email as client_email,
+            c.company as client_company,
+            u.full_name as assigned_user_name,
+            u.email as assigned_user_email,
+            creator.full_name as creator_name,
+            creator.email as creator_email
+          FROM tickets t
+          LEFT JOIN clients c ON t.client_id = c.id
+          LEFT JOIN users u ON t.assigned_to = u.id
+          LEFT JOIN users creator ON t.created_by = creator.id
+          ORDER BY t.created_at DESC
         `)
-        .order('created_at', { ascending: false })
+        .all()
       
-      if (error) throw error
-      
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(results), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     } catch (error) {
@@ -129,17 +184,52 @@ const routes = {
     }
   },
 
-  'POST /api/tickets': async (request) => {
+  'POST /api/tickets': async (request, env) => {
     try {
       const body = await request.json()
-      const { data, error } = await supabase
-        .from('tickets')
-        .insert([body])
-        .select()
       
-      if (error) throw error
+      // Gerar UUID se não fornecido
+      if (!body.id) {
+        body.id = generateUUID()
+      }
       
-      return new Response(JSON.stringify(data[0]), {
+      const { success, error } = await env.starprinttalks_db
+        .prepare('INSERT INTO tickets (id, title, description, priority, status, client_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .bind(
+          body.id,
+          body.title,
+          body.description || null,
+          body.priority || 'medium',
+          body.status || 'open',
+          body.client_id,
+          body.created_by || '00000000-0000-0000-0000-000000000000' // Usuário sistema
+        )
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      // Buscar o ticket criado com joins
+      const { results } = await env.starprinttalks_db
+        .prepare(`
+          SELECT 
+            t.*,
+            c.name as client_name,
+            c.email as client_email,
+            c.company as client_company,
+            u.full_name as assigned_user_name,
+            u.email as assigned_user_email,
+            creator.full_name as creator_name,
+            creator.email as creator_email
+          FROM tickets t
+          LEFT JOIN clients c ON t.client_id = c.id
+          LEFT JOIN users u ON t.assigned_to = u.id
+          LEFT JOIN users creator ON t.created_by = creator.id
+          WHERE t.id = ?
+        `)
+        .bind(body.id)
+        .first()
+      
+      return new Response(JSON.stringify(results), {
         status: 201,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -152,7 +242,7 @@ const routes = {
   },
 
   // Conversations endpoints
-  'GET /api/conversations': async (request) => {
+  'GET /api/conversations': async (request, env) => {
     try {
       const url = new URL(request.url)
       const ticketId = url.searchParams.get('ticket_id')
@@ -164,18 +254,21 @@ const routes = {
         })
       }
 
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          sender:users!sender_id(full_name, email)
+      const { results } = await env.starprinttalks_db
+        .prepare(`
+          SELECT 
+            c.*,
+            u.full_name as sender_name,
+            u.email as sender_email
+          FROM conversations c
+          LEFT JOIN users u ON c.sender_id = u.id
+          WHERE c.ticket_id = ?
+          ORDER BY c.created_at ASC
         `)
-        .eq('ticket_id', ticketId)
-        .order('created_at', { ascending: true })
+        .bind(ticketId)
+        .all()
       
-      if (error) throw error
-      
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(results), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     } catch (error) {
@@ -186,17 +279,35 @@ const routes = {
     }
   },
 
-  'POST /api/conversations': async (request) => {
+  'POST /api/conversations': async (request, env) => {
     try {
       const body = await request.json()
-      const { data, error } = await supabase
-        .from('conversations')
-        .insert([body])
-        .select()
       
-      if (error) throw error
+      // Gerar UUID se não fornecido
+      if (!body.id) {
+        body.id = generateUUID()
+      }
       
-      return new Response(JSON.stringify(data[0]), {
+      const { success, error } = await env.starprinttalks_db
+        .prepare('INSERT INTO conversations (id, ticket_id, sender_id, message, message_type) VALUES (?, ?, ?, ?, ?)')
+        .bind(
+          body.id,
+          body.ticket_id,
+          body.sender_id,
+          body.message,
+          body.message_type || 'text'
+        )
+        .run()
+      
+      if (!success) throw new Error(error)
+      
+      // Buscar a conversa criada
+      const { results } = await env.starprinttalks_db
+        .prepare('SELECT * FROM conversations WHERE id = ?')
+        .bind(body.id)
+        .first()
+      
+      return new Response(JSON.stringify(results), {
         status: 201,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -209,7 +320,7 @@ const routes = {
   },
 
   // Notifications endpoints
-  'GET /api/notifications': async (request) => {
+  'GET /api/notifications': async (request, env) => {
     try {
       const url = new URL(request.url)
       const userId = url.searchParams.get('user_id')
@@ -221,15 +332,12 @@ const routes = {
         })
       }
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+      const { results } = await env.starprinttalks_db
+        .prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC')
+        .bind(userId)
+        .all()
       
-      if (error) throw error
-      
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(results), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     } catch (error) {

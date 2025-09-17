@@ -1,40 +1,18 @@
-name = "starprinttalks"
-main = "src/index.js"
+name = "starprinttalks-api"
+main = "src/worker.js"
 compatibility_date = "2024-01-15"
-
-[env.production]
-name = "starprinttalks"
-
-[env.staging]
-name = "starprinttalks-staging"
-
-# Cloudflare Pages
-[build]
-command = "npm run build"
-cwd = "."
 
 # Environment variables
 [vars]
-SUPABASE_URL = "https://pzxqinijxqmiyvgkmohf.supabase.co"
-SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6eHFpbmlqeHFtaXl2Z2ttb2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMjAzMzksImV4cCI6MjA3MzY5NjMzOX0.OHRDtdreeMJAzs3MD8smQ3hbmtnOcBPSJWfngDnjmx4"
-SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6eHFpbmlqeHFtaXl2Z2ttb2hmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODEyMDMzOSwiZXhwIjoyMDczNjk2MzM5fQ.Y5b9U-fJdoW7kAYeH_J7nKWxeZCnJNbMSWXCMfZTM3o"
+CLOUDFLARE_ACCOUNT_ID = "0fcf859333ab748f1f4412f3d496cc99"
 
 # AI Model configuration
-[[ai]]
+[ai]
 binding = "AI"
 model = "@cf/meta/llama-3-8b-instruct"
 
-# Durable Objects (if needed for real-time features)
-# [[durable_objects.bindings]]
-# name = "CONVERSATIONS"
-# class_name = "ConversationRoom"
-
-# R2 Storage (for file uploads)
-# [[r2_buckets]]
-# binding = "FILES"
-# bucket_name = "starprinttalks-files"
-
-# KV Storage (for caching)
-# [[kv_namespaces]]
-# binding = "CACHE"
-# id = "your-kv-namespace-id"
+# D1 Database
+[[d1_databases]]
+binding = "starprinttalks_db"
+database_name = "starprinttalks-db"
+database_id = "0ac09cfb-54c7-48c4-9bce-8e3b2d88af40"
